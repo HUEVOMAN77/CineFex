@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cinefex</string>
+    <string name="popular_movies">Películas Populares</string>
+    <string name="select_server">Seleccionar Servidor</string>
+    <string name="no_servers_available">No hay servidores disponibles para esta película</string>
+    <string name="error_loading_movies">Error al cargar las películas</string>
+    <string name="retry">Reintentar</string>
+    <string name="close">Cerrar</string>
+</resources>
