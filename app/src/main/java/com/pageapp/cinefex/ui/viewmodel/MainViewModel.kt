@@ -62,11 +62,6 @@ class MainViewModel(
             val linkData = repository.getMovieLinkData(movie.id)
             _eventFlow.emit(UiEvent.HideLoadingDialog)
 
-            if (linkData == null) {
-                _eventFlow.emit(UiEvent.ShowToast("No hay servidores disponibles para esta película"))
-                return@launch
-            }
-
             val servers = linkData.servers
             val singleEmbedUrl = linkData.embedUrl
 

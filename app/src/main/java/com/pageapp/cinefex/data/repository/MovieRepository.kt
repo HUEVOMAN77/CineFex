@@ -21,7 +21,7 @@ class MovieRepository(
         }
     }
 
-    suspend fun getMovieLinkData(movieId: Long): MovieLinkData? {
+    suspend fun getMovieLinkData(movieId: Long): MovieLinkData {
         return try {
             val firestore = firestoreProvider()
             val document = firestore.collection("movies_links")
@@ -29,29 +29,45 @@ class MovieRepository(
                 .get()
                 .await()
 
-            if (!document.exists()) {
-                return null
+            if (document.exists()) {
+                val rawEmbedUrl = document.getString("embed_url")
+                val serversListRaw = document.get("servers") as? List<Map<String, Any>>
+
+                val servers = serversListRaw?.mapNotNull { item ->
+                    val name = item["name"] as? String ?: ""
+                    val language = item["language"] as? String ?: ""
+                    val embedUrl = item["embed_url"] as? String ?: (item["embedUrl"] as? String ?: "")
+                    if (embedUrl.isNotEmpty()) {
+                        ServerOption(name = name, language = language, embedUrl = embedUrl)
+                    } else null
+                }?.sortedBy { it.language } ?: emptyList()
+
+                if (servers.isNotEmpty() || !rawEmbedUrl.isNullOrEmpty()) {
+                    return MovieLinkData(
+                        embedUrl = rawEmbedUrl,
+                        servers = servers
+                    )
+                }
             }
 
-            val rawEmbedUrl = document.getString("embed_url")
-            val serversListRaw = document.get("servers") as? List<Map<String, Any>>
-
-            val servers = serversListRaw?.mapNotNull { item ->
-                val name = item["name"] as? String ?: ""
-                val language = item["language"] as? String ?: ""
-                val embedUrl = item["embed_url"] as? String ?: (item["embedUrl"] as? String ?: "")
-                if (embedUrl.isNotEmpty()) {
-                    ServerOption(name = name, language = language, embedUrl = embedUrl)
-                } else null
-            }?.sortedBy { it.language } ?: emptyList()
-
-            MovieLinkData(
-                embedUrl = rawEmbedUrl,
-                servers = servers
-            )
+            // Fallback default servers if document doesn't exist or servers are empty
+            getDefaultMovieLinkData(movieId)
         } catch (e: Exception) {
             e.printStackTrace()
-            null
+            getDefaultMovieLinkData(movieId)
         }
+    }
+
+    fun getDefaultMovieLinkData(movieId: Long): MovieLinkData {
+        val defaultServers = listOf(
+            ServerOption(name = "Ultra", language = "SUB", embedUrl = "https://vidsrc.to/embed/movie/$movieId"),
+            ServerOption(name = "Zeus", language = "LAT/SUB", embedUrl = "https://autoembed.to/movie/tmdb/$movieId"),
+            ServerOption(name = "Fast", language = "SUB", embedUrl = "https://multiembed.mov/directstream.php?video_id=$movieId&tmdb=1")
+        ).sortedBy { it.language }
+
+        return MovieLinkData(
+            embedUrl = null,
+            servers = defaultServers
+        )
     }
 }

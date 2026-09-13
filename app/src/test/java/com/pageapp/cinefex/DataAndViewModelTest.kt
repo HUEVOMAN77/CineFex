@@ -4,13 +4,11 @@ import com.pageapp.cinefex.data.api.TmdbApiService
 import com.pageapp.cinefex.data.model.Movie
 import com.pageapp.cinefex.data.model.MovieResponse
 import com.pageapp.cinefex.data.model.ServerOption
-import com.pageapp.cinefex.ui.viewmodel.MainViewModel
-import com.pageapp.cinefex.ui.viewmodel.MoviesUiState
+import com.pageapp.cinefex.data.repository.MovieRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -58,6 +56,30 @@ class DataAndViewModelTest {
         assertEquals("Castellano", sorted[0].language)
         assertEquals("Latino", sorted[1].language)
         assertEquals("Subtitulado", sorted[2].language)
+    }
+
+    @Test
+    fun testDefaultFallbackServers() {
+        val movieId = 550L
+        val repository = MovieRepository()
+        val defaultData = repository.getDefaultMovieLinkData(movieId)
+
+        assertEquals(3, defaultData.servers.size)
+
+        val ultraServer = defaultData.servers.find { it.name == "Ultra" }
+        assertNotNull(ultraServer)
+        assertEquals("SUB", ultraServer?.language)
+        assertEquals("https://vidsrc.to/embed/movie/550", ultraServer?.embedUrl)
+
+        val zeusServer = defaultData.servers.find { it.name == "Zeus" }
+        assertNotNull(zeusServer)
+        assertEquals("LAT/SUB", zeusServer?.language)
+        assertEquals("https://autoembed.to/movie/tmdb/550", zeusServer?.embedUrl)
+
+        val fastServer = defaultData.servers.find { it.name == "Fast" }
+        assertNotNull(fastServer)
+        assertEquals("SUB", fastServer?.language)
+        assertEquals("https://multiembed.mov/directstream.php?video_id=550&tmdb=1", fastServer?.embedUrl)
     }
 
     @Test
