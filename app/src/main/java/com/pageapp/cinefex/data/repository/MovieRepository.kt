@@ -75,12 +75,10 @@ class MovieRepository(
 
     fun getDefaultMovieLinkData(movieId: Long): MovieLinkData {
         val defaultServers = listOf(
-            ServerOption(name = "Voe", language = "SUB/LAT", embedUrl = "https://voe.sx/e/$movieId"),
-            ServerOption(name = "FileMoon", language = "SUB/LAT", embedUrl = "https://filemoon.sx/e/$movieId"),
-            ServerOption(name = "GoodStream", language = "SUB/LAT", embedUrl = "https://goodstream.one/e/$movieId"),
-            ServerOption(name = "Vimeo", language = "SUB", embedUrl = "https://player.vimeo.com/video/$movieId"),
-            ServerOption(name = "Cloudflare Stream", language = "SUB", embedUrl = "https://iframe.cloudflarestream.com/$movieId"),
-            ServerOption(name = "Mux Player", language = "SUB", embedUrl = "https://stream.mux.com/$movieId.m3u8")
+            ServerOption(name = "VidSrc", language = "Latino / Sub", embedUrl = "https://vidsrc.to/embed/movie/$movieId"),
+            ServerOption(name = "EmbedSU", language = "Latino / Sub", embedUrl = "https://embed.su/embed/movie/$movieId"),
+            ServerOption(name = "AutoEmbed", language = "Latino / Sub", embedUrl = "https://autoembed.co/movie/tmdb/$movieId"),
+            ServerOption(name = "MultiEmbed", language = "Latino / Sub", embedUrl = "https://multiembed.mov/directstream.php?video_id=$movieId&tmdb=1")
         )
 
         return MovieLinkData(

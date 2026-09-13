@@ -59,24 +59,28 @@ class DataAndViewModelTest {
     }
 
     @Test
-    fun testStableHosterFallbackServers() {
+    fun testFourSpanishLatinoFallbackServers() {
         val movieId = 550L
         val repository = MovieRepository()
         val defaultData = repository.getDefaultMovieLinkData(movieId)
 
-        assertEquals(6, defaultData.servers.size)
+        assertEquals(4, defaultData.servers.size)
 
-        val voeServer = defaultData.servers.find { it.name == "Voe" }
-        assertNotNull(voeServer)
-        assertEquals("https://voe.sx/e/550", voeServer?.embedUrl)
+        val vidsrc = defaultData.servers.find { it.name == "VidSrc" }
+        assertNotNull(vidsrc)
+        assertEquals("https://vidsrc.to/embed/movie/550", vidsrc?.embedUrl)
 
-        val fileMoonServer = defaultData.servers.find { it.name == "FileMoon" }
-        assertNotNull(fileMoonServer)
-        assertEquals("https://filemoon.sx/e/550", fileMoonServer?.embedUrl)
+        val embedsu = defaultData.servers.find { it.name == "EmbedSU" }
+        assertNotNull(embedsu)
+        assertEquals("https://embed.su/embed/movie/550", embedsu?.embedUrl)
 
-        val goodStreamServer = defaultData.servers.find { it.name == "GoodStream" }
-        assertNotNull(goodStreamServer)
-        assertEquals("https://goodstream.one/e/550", goodStreamServer?.embedUrl)
+        val autoembed = defaultData.servers.find { it.name == "AutoEmbed" }
+        assertNotNull(autoembed)
+        assertEquals("https://autoembed.co/movie/tmdb/550", autoembed?.embedUrl)
+
+        val multiembed = defaultData.servers.find { it.name == "MultiEmbed" }
+        assertNotNull(multiembed)
+        assertEquals("https://multiembed.mov/directstream.php?video_id=550&tmdb=1", multiembed?.embedUrl)
     }
 
     @Test
