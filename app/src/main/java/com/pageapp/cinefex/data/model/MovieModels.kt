@@ -29,9 +29,10 @@ data class Movie(
 
 data class ServerOption(
     val name: String = "",
-    val language: String = "",
+    val language: String = "Español Latino",
     @SerializedName("embed_url")
-    val embedUrl: String = ""
+    val embedUrl: String = "",
+    val isLatino: Boolean = true
 )
 
 data class MovieLinkData(

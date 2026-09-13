@@ -14,6 +14,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -59,28 +60,22 @@ class DataAndViewModelTest {
     }
 
     @Test
-    fun testFourSpanishLatinoFallbackServers() {
+    fun testCentralizedLatinoServers() {
         val movieId = 550L
         val repository = MovieRepository()
         val defaultData = repository.getDefaultMovieLinkData(movieId)
 
         assertEquals(4, defaultData.servers.size)
 
-        val vidsrc = defaultData.servers.find { it.name == "VidSrc" }
-        assertNotNull(vidsrc)
-        assertEquals("https://vidsrc.to/embed/movie/550", vidsrc?.embedUrl)
+        val principalLatino = defaultData.servers.find { it.name.contains("Principal") }
+        assertNotNull(principalLatino)
+        assertTrue(principalLatino!!.embedUrl.contains("lang=lat"))
+        assertTrue(principalLatino.isLatino)
 
-        val embedsu = defaultData.servers.find { it.name == "EmbedSU" }
-        assertNotNull(embedsu)
-        assertEquals("https://embed.su/embed/movie/550", embedsu?.embedUrl)
-
-        val autoembed = defaultData.servers.find { it.name == "AutoEmbed" }
-        assertNotNull(autoembed)
-        assertEquals("https://autoembed.co/movie/tmdb/550", autoembed?.embedUrl)
-
-        val multiembed = defaultData.servers.find { it.name == "MultiEmbed" }
-        assertNotNull(multiembed)
-        assertEquals("https://multiembed.mov/directstream.php?video_id=550&tmdb=1", multiembed?.embedUrl)
+        val secundarioLatino = defaultData.servers.find { it.name.contains("Secundario") }
+        assertNotNull(secundarioLatino)
+        assertTrue(secundarioLatino!!.embedUrl.contains("lang=es-lat"))
+        assertTrue(secundarioLatino.isLatino)
     }
 
     @Test

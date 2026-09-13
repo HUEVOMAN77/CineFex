@@ -26,8 +26,12 @@ class ServerAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(server: ServerOption) {
-            binding.tvServerName.text = server.name.ifEmpty { "Servidor ${adapterPosition + 1}" }
-            binding.tvServerLanguage.text = server.language.ifEmpty { "Desconocido" }
+            binding.tvServerName.text = server.name.ifEmpty { "Servidor Latino ${bindingAdapterPosition + 1}" }
+            binding.tvServerLanguage.text = if (server.language.contains("Latino", ignoreCase = true)) {
+                server.language
+            } else {
+                "${server.language} [LATINO]"
+            }
             binding.root.setOnClickListener {
                 onServerClick(server)
             }
