@@ -59,24 +59,24 @@ class DataAndViewModelTest {
     }
 
     @Test
-    fun testTenFallbackServers() {
+    fun testStableHosterFallbackServers() {
         val movieId = 550L
         val repository = MovieRepository()
         val defaultData = repository.getDefaultMovieLinkData(movieId)
 
-        assertEquals(10, defaultData.servers.size)
+        assertEquals(6, defaultData.servers.size)
 
-        val vidsrcTo = defaultData.servers.find { it.name == "VidSrc TO" }
-        assertNotNull(vidsrcTo)
-        assertEquals("https://vidsrc.to/embed/movie/550", vidsrcTo?.embedUrl)
+        val voeServer = defaultData.servers.find { it.name == "Voe" }
+        assertNotNull(voeServer)
+        assertEquals("https://voe.sx/e/550", voeServer?.embedUrl)
 
-        val autoEmbed = defaultData.servers.find { it.name == "AutoEmbed" }
-        assertNotNull(autoEmbed)
-        assertEquals("https://autoembed.co/movie/tmdb/550", autoEmbed?.embedUrl)
+        val fileMoonServer = defaultData.servers.find { it.name == "FileMoon" }
+        assertNotNull(fileMoonServer)
+        assertEquals("https://filemoon.sx/e/550", fileMoonServer?.embedUrl)
 
-        val moviesApi = defaultData.servers.find { it.name == "MoviesAPI" }
-        assertNotNull(moviesApi)
-        assertEquals("https://moviesapi.club/movie/550", moviesApi?.embedUrl)
+        val goodStreamServer = defaultData.servers.find { it.name == "GoodStream" }
+        assertNotNull(goodStreamServer)
+        assertEquals("https://goodstream.one/e/550", goodStreamServer?.embedUrl)
     }
 
     @Test

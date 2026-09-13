@@ -57,8 +57,8 @@ class CategoryAdapter(
                         if (currentPosition != RecyclerView.NO_POSITION && currentPosition < sections.size) {
                             val section = sections[currentPosition]
                             if (!section.isLoadingMore && section.hasMorePages) {
-                                // Trigger load when remaining items <= 5
-                                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
+                                // Trigger load when remaining items <= 6
+                                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 6
                                     && firstVisibleItemPosition >= 0
                                 ) {
                                     onLoadNextPage(section.category)
