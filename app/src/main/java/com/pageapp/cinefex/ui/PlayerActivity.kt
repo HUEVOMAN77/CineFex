@@ -116,14 +116,14 @@ class PlayerActivity : AppCompatActivity() {
                 request: WebResourceRequest?
             ): Boolean {
                 val targetUri = request?.url ?: return false
-                val targetHost = targetUri.host
+                val scheme = targetUri.scheme?.lowercase()
 
-                // Allow navigation within the same host domain
-                if (targetHost != null && initialHost != null && targetHost.contains(initialHost!!)) {
+                // Allow web navigation (http / https) for video embed sources & CDN subdomains
+                if (scheme == "http" || scheme == "https") {
                     return false
                 }
 
-                // Block external ad redirects & malicious downloads
+                // Block external app store redirects, intent schemes, & pop-up app intents
                 return true
             }
 
