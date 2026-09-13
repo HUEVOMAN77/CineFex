@@ -48,7 +48,7 @@ class CategoryAdapter(
             binding.rvHorizontalMovies.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
-                    if (dx > 0) {
+                    if (dx > 0) { // Scrolling right
                         val visibleItemCount = layoutManager.childCount
                         val totalItemCount = layoutManager.itemCount
                         val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
@@ -57,7 +57,8 @@ class CategoryAdapter(
                         if (currentPosition != RecyclerView.NO_POSITION && currentPosition < sections.size) {
                             val section = sections[currentPosition]
                             if (!section.isLoadingMore && section.hasMorePages) {
-                                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 4
+                                // Trigger load when remaining items <= 5
+                                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
                                     && firstVisibleItemPosition >= 0
                                 ) {
                                     onLoadNextPage(section.category)

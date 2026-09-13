@@ -111,7 +111,11 @@ class MainViewModel(
                     val idx = updatedSections.indexOfFirst { it.category == category }
                     if (idx != -1) {
                         val currentSec = updatedSections[idx]
-                        val combinedList = currentSec.movies + newMovies
+                        // Filter duplicates by TMDB ID before appending
+                        val existingIds = currentSec.movies.map { it.id }.toSet()
+                        val uniqueNewMovies = newMovies.filterNot { existingIds.contains(it.id) }
+                        val combinedList = currentSec.movies + uniqueNewMovies
+
                         updatedSections[idx] = currentSec.copy(
                             movies = combinedList,
                             currentPage = nextPage,

@@ -75,13 +75,17 @@ class MovieRepository(
 
     fun getDefaultMovieLinkData(movieId: Long): MovieLinkData {
         val defaultServers = listOf(
+            ServerOption(name = "VidSrc TO", language = "SUB", embedUrl = "https://vidsrc.to/embed/movie/$movieId"),
+            ServerOption(name = "VidSrc ME", language = "SUB", embedUrl = "https://vidsrc.me/embed/movie?tmdb=$movieId"),
+            ServerOption(name = "VidSrc VIP", language = "LAT/SUB", embedUrl = "https://vidsrc.vip/embed/movie/$movieId"),
+            ServerOption(name = "AutoEmbed", language = "LAT/SUB", embedUrl = "https://autoembed.co/movie/tmdb/$movieId"),
             ServerOption(name = "EmbedSU", language = "LAT/SUB", embedUrl = "https://embed.su/embed/movie/$movieId"),
-            ServerOption(name = "VidSrc IN", language = "SUB", embedUrl = "https://vidsrc.in/embed/movie/$movieId"),
-            ServerOption(name = "AutoEmbed CC", language = "LAT/SUB", embedUrl = "https://autoembed.cc/movie/tmdb/$movieId"),
+            ServerOption(name = "MultiEmbed", language = "LAT/SUB", embedUrl = "https://multiembed.mov/directstream.php?video_id=$movieId&tmdb=1"),
             ServerOption(name = "VidLink", language = "SUB", embedUrl = "https://vidlink.pro/movie/$movieId"),
             ServerOption(name = "2Embed", language = "SUB", embedUrl = "https://www.2embed.cc/embed/$movieId"),
-            ServerOption(name = "Multi", language = "LAT/SUB", embedUrl = "https://multiembed.mov/directstream.php?video_id=$movieId&tmdb=1")
-        ).sortedBy { it.language }
+            ServerOption(name = "VidSrc PRO", language = "SUB", embedUrl = "https://vidsrc.pro/embed/movie/$movieId"),
+            ServerOption(name = "MoviesAPI", language = "LAT/SUB", embedUrl = "https://moviesapi.club/movie/$movieId")
+        )
 
         return MovieLinkData(
             embedUrl = null,

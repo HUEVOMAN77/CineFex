@@ -31,17 +31,18 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPlayerBinding
     private var exoPlayer: ExoPlayer? = null
     private var isStreamDetected = false
+    private var isFallbackTriggered = false
     private var initialHost: String? = null
     private val mainHandler = Handler(Looper.getMainLooper())
     private val snifferTimeoutRunnable = Runnable {
-        if (!isStreamDetected && !isFinishing) {
-            fallbackToWebViewPlayer()
+        if (!isStreamDetected && !isFallbackTriggered && !isFinishing) {
+            fallbackToWebViewPlayer("Tiempo de extracción agotado. Cargando en reproductor web...")
         }
     }
 
     companion object {
         const val EXTRA_EMBED_URL = "extra_embed_url"
-        private const val SNIFFER_TIMEOUT_MS = 15000L
+        private const val SNIFFER_TIMEOUT_MS = 4000L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,8 +119,7 @@ class PlayerActivity : AppCompatActivity() {
                 val reqUrl = request?.url?.toString() ?: return super.shouldInterceptRequest(view, request)
                 val lowerUrl = reqUrl.lowercase()
 
-                if (!isStreamDetected && (lowerUrl.contains(".m3u8") || lowerUrl.contains(".mp4"))) {
-                    // Exclude minor segments if main m3u8 playlist exists
+                if (!isStreamDetected && !isFallbackTriggered && (lowerUrl.contains(".m3u8") || lowerUrl.contains(".mp4"))) {
                     if (!lowerUrl.contains("key") && !lowerUrl.contains("init")) {
                         isStreamDetected = true
                         mainHandler.removeCallbacks(snifferTimeoutRunnable)
@@ -129,7 +129,6 @@ class PlayerActivity : AppCompatActivity() {
                             playNativeStream(reqUrl)
                         }
 
-                        // Return empty response to intercept and cancel webview stream
                         return WebResourceResponse("text/plain", "utf-8", null)
                     }
                 }
@@ -151,8 +150,7 @@ class PlayerActivity : AppCompatActivity() {
             setMediaItem(MediaItem.fromUri(streamUrl))
             addListener(object : Player.Listener {
                 override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                    Toast.makeText(this@PlayerActivity, "Error en ExoPlayer, cambiando a WebView...", Toast.LENGTH_SHORT).show()
-                    fallbackToWebViewPlayer()
+                    fallbackToWebViewPlayer("Error en ExoPlayer. Cargando reproductor web...")
                 }
             })
             prepare()
@@ -163,9 +161,17 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun fallbackToWebViewPlayer() {
-        if (isFinishing) return
+    private fun fallbackToWebViewPlayer(reasonMessage: String? = null) {
+        if (isFinishing || isFallbackTriggered) return
+        isFallbackTriggered = true
         stopSnifferWebView()
+
+        exoPlayer?.release()
+        exoPlayer = null
+
+        if (!reasonMessage.isNullOrEmpty()) {
+            Toast.makeText(this@PlayerActivity, reasonMessage, Toast.LENGTH_SHORT).show()
+        }
 
         binding.playerProgressBar.visibility = View.GONE
         binding.tvSniffingStatus.visibility = View.GONE

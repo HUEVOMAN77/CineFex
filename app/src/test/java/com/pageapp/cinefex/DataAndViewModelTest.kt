@@ -59,24 +59,24 @@ class DataAndViewModelTest {
     }
 
     @Test
-    fun testExpandedFallbackServers() {
+    fun testTenFallbackServers() {
         val movieId = 550L
         val repository = MovieRepository()
         val defaultData = repository.getDefaultMovieLinkData(movieId)
 
-        assertEquals(6, defaultData.servers.size)
+        assertEquals(10, defaultData.servers.size)
 
-        val embedSuServer = defaultData.servers.find { it.name == "EmbedSU" }
-        assertNotNull(embedSuServer)
-        assertEquals("https://embed.su/embed/movie/550", embedSuServer?.embedUrl)
+        val vidsrcTo = defaultData.servers.find { it.name == "VidSrc TO" }
+        assertNotNull(vidsrcTo)
+        assertEquals("https://vidsrc.to/embed/movie/550", vidsrcTo?.embedUrl)
 
-        val vidSrcInServer = defaultData.servers.find { it.name == "VidSrc IN" }
-        assertNotNull(vidSrcInServer)
-        assertEquals("https://vidsrc.in/embed/movie/550", vidSrcInServer?.embedUrl)
+        val autoEmbed = defaultData.servers.find { it.name == "AutoEmbed" }
+        assertNotNull(autoEmbed)
+        assertEquals("https://autoembed.co/movie/tmdb/550", autoEmbed?.embedUrl)
 
-        val autoEmbedServer = defaultData.servers.find { it.name == "AutoEmbed CC" }
-        assertNotNull(autoEmbedServer)
-        assertEquals("https://autoembed.cc/movie/tmdb/550", autoEmbedServer?.embedUrl)
+        val moviesApi = defaultData.servers.find { it.name == "MoviesAPI" }
+        assertNotNull(moviesApi)
+        assertEquals("https://moviesapi.club/movie/550", moviesApi?.embedUrl)
     }
 
     @Test
