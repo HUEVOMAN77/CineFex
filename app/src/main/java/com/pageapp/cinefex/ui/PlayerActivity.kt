@@ -5,25 +5,43 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
 import com.pageapp.cinefex.databinding.ActivityPlayerBinding
 
 class PlayerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPlayerBinding
+    private var exoPlayer: ExoPlayer? = null
+    private var isStreamDetected = false
     private var initialHost: String? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val snifferTimeoutRunnable = Runnable {
+        if (!isStreamDetected && !isFinishing) {
+            fallbackToWebViewPlayer()
+        }
+    }
 
     companion object {
         const val EXTRA_EMBED_URL = "extra_embed_url"
+        private const val SNIFFER_TIMEOUT_MS = 15000L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +59,7 @@ class PlayerActivity : AppCompatActivity() {
 
         initialHost = Uri.parse(embedUrl).host
 
-        setupWebView(embedUrl)
+        setupVideoSniffer(embedUrl)
     }
 
     private fun enableFullscreen() {
@@ -64,22 +82,105 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun setupWebView(url: String) {
-        val webView = binding.webView
+    private fun setupVideoSniffer(url: String) {
+        binding.playerProgressBar.visibility = View.VISIBLE
+        binding.tvSniffingStatus.visibility = View.VISIBLE
 
-        // Hardware acceleration configuration for performance on Redmi 13C and Huawei Nova 10
+        mainHandler.postDelayed(snifferTimeoutRunnable, SNIFFER_TIMEOUT_MS)
+
+        val webView = binding.webViewSniffer
+        val settings = webView.settings
+        settings.javaScriptEnabled = true
+        settings.domStorageEnabled = true
+        settings.mediaPlaybackRequiresUserGesture = false
+        settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onCreateWindow(
+                view: WebView?,
+                isDialog: Boolean,
+                isUserGesture: Boolean,
+                resultMsg: Message?
+            ): Boolean {
+                val tempWebView = WebView(this@PlayerActivity)
+                val transport = resultMsg?.obj as? WebView.WebViewTransport
+                transport?.webView = tempWebView
+                resultMsg?.sendToTarget()
+                return true
+            }
+        }
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): WebResourceResponse? {
+                val reqUrl = request?.url?.toString() ?: return super.shouldInterceptRequest(view, request)
+                val lowerUrl = reqUrl.lowercase()
+
+                if (!isStreamDetected && (lowerUrl.contains(".m3u8") || lowerUrl.contains(".mp4"))) {
+                    // Exclude minor segments if main m3u8 playlist exists
+                    if (!lowerUrl.contains("key") && !lowerUrl.contains("init")) {
+                        isStreamDetected = true
+                        mainHandler.removeCallbacks(snifferTimeoutRunnable)
+
+                        mainHandler.post {
+                            stopSnifferWebView()
+                            playNativeStream(reqUrl)
+                        }
+
+                        // Return empty response to intercept and cancel webview stream
+                        return WebResourceResponse("text/plain", "utf-8", null)
+                    }
+                }
+
+                return super.shouldInterceptRequest(view, request)
+            }
+        }
+
+        webView.loadUrl(url)
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun playNativeStream(streamUrl: String) {
+        binding.playerProgressBar.visibility = View.GONE
+        binding.tvSniffingStatus.visibility = View.GONE
+        binding.playerView.visibility = View.VISIBLE
+
+        exoPlayer = ExoPlayer.Builder(this).build().apply {
+            setMediaItem(MediaItem.fromUri(streamUrl))
+            addListener(object : Player.Listener {
+                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                    Toast.makeText(this@PlayerActivity, "Error en ExoPlayer, cambiando a WebView...", Toast.LENGTH_SHORT).show()
+                    fallbackToWebViewPlayer()
+                }
+            })
+            prepare()
+            playWhenReady = true
+        }
+
+        binding.playerView.player = exoPlayer
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun fallbackToWebViewPlayer() {
+        if (isFinishing) return
+        stopSnifferWebView()
+
+        binding.playerProgressBar.visibility = View.GONE
+        binding.tvSniffingStatus.visibility = View.GONE
+        binding.playerView.visibility = View.GONE
+        binding.webViewFallback.visibility = View.VISIBLE
+
+        val webView = binding.webViewFallback
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
-        val settings: WebSettings = webView.settings
+        val settings = webView.settings
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         settings.setSupportMultipleWindows(true)
         settings.javaScriptCanOpenWindowsAutomatically = true
-
-        // Additional performance & media settings
         settings.mediaPlaybackRequiresUserGesture = false
-        settings.allowFileAccess = false
-        settings.allowContentAccess = false
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
 
         webView.webChromeClient = object : WebChromeClient() {
@@ -89,14 +190,9 @@ class PlayerActivity : AppCompatActivity() {
                 isUserGesture: Boolean,
                 resultMsg: Message?
             ): Boolean {
-                // Intercept and discard popup windows generated by ad triggers
                 val tempWebView = WebView(this@PlayerActivity)
                 tempWebView.webViewClient = object : WebViewClient() {
-                    override fun shouldOverrideUrlLoading(
-                        view: WebView?,
-                        request: WebResourceRequest?
-                    ): Boolean {
-                        // Destroy popup silently without opening
+                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                         tempWebView.destroy()
                         return true
                     }
@@ -106,61 +202,47 @@ class PlayerActivity : AppCompatActivity() {
                 resultMsg?.sendToTarget()
                 return true
             }
-
-            override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                if (newProgress >= 90) {
-                    binding.playerProgressBar.visibility = View.GONE
-                } else {
-                    binding.playerProgressBar.visibility = View.VISIBLE
-                }
-            }
         }
 
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(
-                view: WebView?,
-                request: WebResourceRequest?
-            ): Boolean {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val targetUri = request?.url ?: return false
                 val targetHost = targetUri.host
-
-                // Allow navigation within the same host or player embedded streams
                 if (targetHost != null && initialHost != null && targetHost.contains(initialHost!!)) {
                     return false
                 }
-
-                // Prevent unwanted ad redirects outside the player domain
                 return true
             }
-
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                binding.playerProgressBar.visibility = View.VISIBLE
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                binding.playerProgressBar.visibility = View.GONE
-            }
         }
 
-        webView.loadUrl(url)
+        val embedUrl = intent.getStringExtra(EXTRA_EMBED_URL) ?: return
+        webView.loadUrl(embedUrl)
     }
 
-    override fun onBackPressed() {
-        if (binding.webView.canGoBack()) {
-            binding.webView.goBack()
-        } else {
-            super.onBackPressed()
+    private fun stopSnifferWebView() {
+        mainHandler.removeCallbacks(snifferTimeoutRunnable)
+        binding.webViewSniffer.run {
+            stopLoading()
+            loadUrl("about:blank")
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        exoPlayer?.pause()
     }
 
     override fun onDestroy() {
-        binding.webView.run {
+        mainHandler.removeCallbacks(snifferTimeoutRunnable)
+        exoPlayer?.release()
+        exoPlayer = null
+
+        binding.webViewSniffer.run {
             stopLoading()
-            onPause()
-            clearHistory()
-            removeAllViews()
+            destroy()
+        }
+        binding.webViewFallback.run {
+            stopLoading()
             destroy()
         }
         super.onDestroy()

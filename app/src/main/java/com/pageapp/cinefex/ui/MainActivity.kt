@@ -10,23 +10,22 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.pageapp.cinefex.data.model.ServerOption
 import com.pageapp.cinefex.databinding.ActivityMainBinding
 import com.pageapp.cinefex.databinding.DialogServerSelectionBinding
-import com.pageapp.cinefex.ui.adapter.MovieAdapter
+import com.pageapp.cinefex.ui.adapter.CategoryAdapter
 import com.pageapp.cinefex.ui.adapter.ServerAdapter
+import com.pageapp.cinefex.ui.viewmodel.MainUiEvent
 import com.pageapp.cinefex.ui.viewmodel.MainViewModel
-import com.pageapp.cinefex.ui.viewmodel.MoviesUiState
-import com.pageapp.cinefex.ui.viewmodel.UiEvent
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
-    private lateinit var movieAdapter: MovieAdapter
+    private lateinit var categoryAdapter: CategoryAdapter
     private var progressDialog: ProgressDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,18 +39,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        movieAdapter = MovieAdapter { movie ->
-            viewModel.onMovieClicked(movie)
-        }
+        categoryAdapter = CategoryAdapter(
+            sections = emptyList(),
+            onMovieClick = { movie ->
+                viewModel.onMovieClicked(movie)
+            },
+            onLoadNextPage = { category ->
+                viewModel.loadNextPage(category)
+            }
+        )
+
         binding.rvMovies.apply {
-            layoutManager = GridLayoutManager(this@MainActivity, 3)
-            adapter = movieAdapter
+            layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
+            adapter = categoryAdapter
         }
     }
 
     private fun setupListeners() {
         binding.btnRetry.setOnClickListener {
-            viewModel.loadPopularMovies()
+            viewModel.loadAllCategories()
         }
     }
 
@@ -60,24 +66,20 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.uiState.collect { state ->
-                        when (state) {
-                            is MoviesUiState.Loading -> {
-                                binding.progressBar.visibility = View.VISIBLE
-                                binding.rvMovies.visibility = View.GONE
-                                binding.errorContainer.visibility = View.GONE
-                            }
-                            is MoviesUiState.Success -> {
-                                binding.progressBar.visibility = View.GONE
-                                binding.rvMovies.visibility = View.VISIBLE
-                                binding.errorContainer.visibility = View.GONE
-                                movieAdapter.submitList(state.movies)
-                            }
-                            is MoviesUiState.Error -> {
-                                binding.progressBar.visibility = View.GONE
-                                binding.rvMovies.visibility = View.GONE
-                                binding.errorContainer.visibility = View.VISIBLE
-                                binding.tvErrorMessage.text = state.message
-                            }
+                        if (state.isLoading) {
+                            binding.progressBar.visibility = View.VISIBLE
+                            binding.rvMovies.visibility = View.GONE
+                            binding.errorContainer.visibility = View.GONE
+                        } else if (state.error != null) {
+                            binding.progressBar.visibility = View.GONE
+                            binding.rvMovies.visibility = View.GONE
+                            binding.errorContainer.visibility = View.VISIBLE
+                            binding.tvErrorMessage.text = state.error
+                        } else {
+                            binding.progressBar.visibility = View.GONE
+                            binding.rvMovies.visibility = View.VISIBLE
+                            binding.errorContainer.visibility = View.GONE
+                            categoryAdapter.updateSections(state.sections)
                         }
                     }
                 }
@@ -85,19 +87,19 @@ class MainActivity : AppCompatActivity() {
                 launch {
                     viewModel.eventFlow.collect { event ->
                         when (event) {
-                            is UiEvent.ShowServerSelection -> {
+                            is MainUiEvent.ShowServerSelection -> {
                                 showServerSelectionDialog(event.movieTitle, event.servers)
                             }
-                            is UiEvent.OpenPlayer -> {
+                            is MainUiEvent.OpenPlayer -> {
                                 openPlayerActivity(event.embedUrl)
                             }
-                            is UiEvent.ShowToast -> {
+                            is MainUiEvent.ShowToast -> {
                                 Toast.makeText(this@MainActivity, event.message, Toast.LENGTH_SHORT).show()
                             }
-                            is UiEvent.ShowLoadingDialog -> {
+                            is MainUiEvent.ShowLoadingDialog -> {
                                 showLoading()
                             }
-                            is UiEvent.HideLoadingDialog -> {
+                            is MainUiEvent.HideLoadingDialog -> {
                                 hideLoading()
                             }
                         }
@@ -121,7 +123,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         dialogBinding.rvServers.apply {
-            layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this@MainActivity)
+            layoutManager = LinearLayoutManager(this@MainActivity)
             this.adapter = adapter
         }
 

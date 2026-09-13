@@ -8,17 +8,33 @@ import com.pageapp.cinefex.data.model.ServerOption
 import kotlinx.coroutines.tasks.await
 import java.lang.Exception
 
+enum class MovieCategory {
+    NOW_PLAYING,
+    POPULAR,
+    TOP_RATED,
+    ACTION
+}
+
 class MovieRepository(
     private val apiService: TmdbApiService = TmdbApiService.create(),
     private val firestoreProvider: () -> FirebaseFirestore = { FirebaseFirestore.getInstance() }
 ) {
-    suspend fun getPopularMovies(page: Int = 1): Result<List<Movie>> {
+    suspend fun getMoviesByCategory(category: MovieCategory, page: Int = 1): Result<List<Movie>> {
         return try {
-            val response = apiService.getPopularMovies(page)
+            val response = when (category) {
+                MovieCategory.NOW_PLAYING -> apiService.getNowPlayingMovies(page)
+                MovieCategory.POPULAR -> apiService.getPopularMovies(page)
+                MovieCategory.TOP_RATED -> apiService.getTopRatedMovies(page)
+                MovieCategory.ACTION -> apiService.getDiscoverMovies(withGenres = "28", page = page)
+            }
             Result.success(response.results)
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun getPopularMovies(page: Int = 1): Result<List<Movie>> {
+        return getMoviesByCategory(MovieCategory.POPULAR, page)
     }
 
     suspend fun getMovieLinkData(movieId: Long): MovieLinkData {
@@ -50,7 +66,6 @@ class MovieRepository(
                 }
             }
 
-            // Fallback default servers if document doesn't exist or servers are empty
             getDefaultMovieLinkData(movieId)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -60,9 +75,12 @@ class MovieRepository(
 
     fun getDefaultMovieLinkData(movieId: Long): MovieLinkData {
         val defaultServers = listOf(
-            ServerOption(name = "Ultra", language = "SUB", embedUrl = "https://vidsrc.to/embed/movie/$movieId"),
-            ServerOption(name = "Zeus", language = "LAT/SUB", embedUrl = "https://autoembed.to/movie/tmdb/$movieId"),
-            ServerOption(name = "Fast", language = "SUB", embedUrl = "https://multiembed.mov/directstream.php?video_id=$movieId&tmdb=1")
+            ServerOption(name = "EmbedSU", language = "LAT/SUB", embedUrl = "https://embed.su/embed/movie/$movieId"),
+            ServerOption(name = "VidSrc IN", language = "SUB", embedUrl = "https://vidsrc.in/embed/movie/$movieId"),
+            ServerOption(name = "AutoEmbed CC", language = "LAT/SUB", embedUrl = "https://autoembed.cc/movie/tmdb/$movieId"),
+            ServerOption(name = "VidLink", language = "SUB", embedUrl = "https://vidlink.pro/movie/$movieId"),
+            ServerOption(name = "2Embed", language = "SUB", embedUrl = "https://www.2embed.cc/embed/$movieId"),
+            ServerOption(name = "Multi", language = "LAT/SUB", embedUrl = "https://multiembed.mov/directstream.php?video_id=$movieId&tmdb=1")
         ).sortedBy { it.language }
 
         return MovieLinkData(

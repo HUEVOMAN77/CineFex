@@ -4,6 +4,7 @@ import com.pageapp.cinefex.data.api.TmdbApiService
 import com.pageapp.cinefex.data.model.Movie
 import com.pageapp.cinefex.data.model.MovieResponse
 import com.pageapp.cinefex.data.model.ServerOption
+import com.pageapp.cinefex.data.repository.MovieCategory
 import com.pageapp.cinefex.data.repository.MovieRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,7 +14,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -59,27 +59,29 @@ class DataAndViewModelTest {
     }
 
     @Test
-    fun testDefaultFallbackServers() {
+    fun testExpandedFallbackServers() {
         val movieId = 550L
         val repository = MovieRepository()
         val defaultData = repository.getDefaultMovieLinkData(movieId)
 
-        assertEquals(3, defaultData.servers.size)
+        assertEquals(6, defaultData.servers.size)
 
-        val ultraServer = defaultData.servers.find { it.name == "Ultra" }
-        assertNotNull(ultraServer)
-        assertEquals("SUB", ultraServer?.language)
-        assertEquals("https://vidsrc.to/embed/movie/550", ultraServer?.embedUrl)
+        val embedSuServer = defaultData.servers.find { it.name == "EmbedSU" }
+        assertNotNull(embedSuServer)
+        assertEquals("https://embed.su/embed/movie/550", embedSuServer?.embedUrl)
 
-        val zeusServer = defaultData.servers.find { it.name == "Zeus" }
-        assertNotNull(zeusServer)
-        assertEquals("LAT/SUB", zeusServer?.language)
-        assertEquals("https://autoembed.to/movie/tmdb/550", zeusServer?.embedUrl)
+        val vidSrcInServer = defaultData.servers.find { it.name == "VidSrc IN" }
+        assertNotNull(vidSrcInServer)
+        assertEquals("https://vidsrc.in/embed/movie/550", vidSrcInServer?.embedUrl)
 
-        val fastServer = defaultData.servers.find { it.name == "Fast" }
-        assertNotNull(fastServer)
-        assertEquals("SUB", fastServer?.language)
-        assertEquals("https://multiembed.mov/directstream.php?video_id=550&tmdb=1", fastServer?.embedUrl)
+        val autoEmbedServer = defaultData.servers.find { it.name == "AutoEmbed CC" }
+        assertNotNull(autoEmbedServer)
+        assertEquals("https://autoembed.cc/movie/tmdb/550", autoEmbedServer?.embedUrl)
+    }
+
+    @Test
+    fun testMovieCategoriesEnum() {
+        assertEquals(4, MovieCategory.values().size)
     }
 
     @Test
