@@ -1,0 +1,12 @@
+[
+  {
+    "tmdb_id": 550,
+    "servers": [
+      {
+        "name": "Servidor Latino 1",
+        "embed_url": "https://servidor-autorizado.example/embed/550",
+        "audio_language": "es-419"
+      }
+    ]
+  }
+]

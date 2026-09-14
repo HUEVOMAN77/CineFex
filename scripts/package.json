@@ -1,0 +1,11 @@
+{
+  "name": "cinefex-firestore-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "import:movies-links": "node import-movies-links.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

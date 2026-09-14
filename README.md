@@ -29,6 +29,25 @@ Aplicación Android desarrollada en **Kotlin** siguiendo la arquitectura **MVVM*
    - Bloqueo y descarte automático de ventanas emergentes / pop-ups de publicidad (`WebChromeClient.onCreateWindow`).
    - Bloqueo de esquemas externos como `intent://`; la app no puede convertir audio inglés a español si el embed no ofrece una pista de audio o subtítulos en español.
 
+## 🗃️ Importar fuentes Latino a Firestore
+
+El repositorio incluye un importador en `scripts/` para poblar la colección
+`movies_links` sin guardar credenciales en el proyecto. El importador valida
+HTTPS y exige metadata explícita como `es-419`, `es-MX`, `es-LAT`, `Latino` o
+`LATAM`.
+
+```bash
+cd scripts
+npm install
+export GOOGLE_APPLICATION_CREDENTIALS="/ruta/segura/service-account.json"
+npm run import:movies-links -- ../movies_links.json
+npm run import:movies-links -- ../movies_links.json --apply
+```
+
+El primer comando solo simula la carga. Usa `--apply` únicamente después de
+revisar los registros y confirmar que cada fuente realmente ofrece audio o
+subtítulos en español latino.
+
 ---
 
 ## 📦 Descarga del APK Compilado
