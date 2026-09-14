@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
-    android:background="#242836"
+    android:background="@drawable/bg_glass_card"
     android:orientation="horizontal"
-    android:padding="14dp">
+    android:padding="16dp">
 
     <ImageView
-        android:layout_width="38dp"
-        android:layout_height="38dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_gravity="center_vertical"
         android:contentDescription="@string/server_icon"
         android:src="@drawable/ic_launcher_round" />
@@ -35,18 +35,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:textColor="#4CAF50"
+            android:textColor="#00F3FF"
             android:textSize="13sp"
             android:textStyle="bold" />
 
     </LinearLayout>
 
     <ImageView
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:layout_gravity="center_vertical"
         android:contentDescription="@string/play_icon"
-        app:tint="#E50914"
+        app:tint="#FF007A"
         android:src="@android:drawable/ic_media_play" />
 
 </LinearLayout>

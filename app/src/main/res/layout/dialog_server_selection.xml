@@ -2,24 +2,24 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/bg_glass_card"
     android:orientation="vertical"
-    android:background="#1E1E1E"
-    android:padding="16dp">
+    android:padding="20dp">
 
     <TextView
-        android:id="@+id/tvDialogTitle"
-        android:layout_width="match_parent"
+        android:id="@+id/textViewDialogTitle"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"
-        android:text="@string/select_server" />
+        android:text="@string/select_server"
+        android:textColor="#00F3FF"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvServers"
+        android:id="@+id/recyclerViewServers"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:maxHeight="350dp" />
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

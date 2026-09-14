@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Neon Cyberpunk Palette -->
+    <color name="neon_cyan">#00F3FF</color>
+    <color name="neon_purple">#9D00FF</color>
+    <color name="neon_magenta">#FF007A</color>
+    <color name="neon_pink">#FF0055</color>
+    <color name="neon_blue">#0077FF</color>
+
+    <!-- Deep Space Background & Glass Surfaces -->
+    <color name="bg_deep_space">#0A0E1A</color>
+    <color name="card_surface">#121829</color>
+    <color name="card_surface_glow">#1E2640</color>
+    <color name="text_white">#FFFFFF</color>
+    <color name="text_muted">#8A99AD</color>
+</resources>

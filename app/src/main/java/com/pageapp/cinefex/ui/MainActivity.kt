@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         val dialogBinding = DialogServerSelectionBinding.inflate(layoutInflater)
         bottomSheetDialog.setContentView(dialogBinding.root)
 
-        dialogBinding.tvDialogTitle.text = "Servidores para: $title"
+        dialogBinding.textViewDialogTitle.text = "Servidores para: $title"
 
         val sortedServers = servers.sortedBy { it.language }
         val adapter = ServerAdapter(sortedServers) { selectedServer ->
@@ -122,7 +122,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.onServerSelected(selectedServer)
         }
 
-        dialogBinding.rvServers.apply {
+        dialogBinding.recyclerViewServers.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             this.adapter = adapter
         }

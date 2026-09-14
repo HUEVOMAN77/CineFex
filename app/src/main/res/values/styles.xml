@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme with Neon Cyberpunk styling -->
     <style name="Base.Theme.Cinefex" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <item name="colorPrimary">#E50914</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="android:statusBarColor">#000000</item>
-        <item name="android:windowBackground">#141414</item>
+        <item name="colorPrimary">@color/neon_cyan</item>
+        <item name="colorOnPrimary">@color/bg_deep_space</item>
+        <item name="colorSecondary">@color/neon_purple</item>
+        <item name="android:statusBarColor">@color/bg_deep_space</item>
+        <item name="android:navigationBarColor">@color/bg_deep_space</item>
+        <item name="android:windowBackground">@color/bg_deep_space</item>
     </style>
 
     <style name="Theme.Cinefex" parent="Base.Theme.Cinefex" />
