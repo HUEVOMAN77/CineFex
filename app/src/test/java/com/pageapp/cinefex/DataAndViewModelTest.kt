@@ -13,7 +13,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -60,22 +59,13 @@ class DataAndViewModelTest {
     }
 
     @Test
-    fun testCentralizedLatinoServers() {
+    fun testUnverifiedFallbackDoesNotClaimLatino() {
         val movieId = 550L
         val repository = MovieRepository()
         val defaultData = repository.getDefaultMovieLinkData(movieId)
 
-        assertTrue(defaultData.servers.size >= 4)
-
-        val principalLatino = defaultData.servers.find { it.name.contains("Servidor 1") || it.name.contains("Principal") }
-        assertNotNull(principalLatino)
-        assertTrue(principalLatino!!.embedUrl.contains("lang=lat"))
-        assertTrue(principalLatino.isLatino)
-
-        val secundarioLatino = defaultData.servers.find { it.name.contains("Servidor 2") || it.name.contains("Secundario") }
-        assertNotNull(secundarioLatino)
-        assertTrue(secundarioLatino!!.embedUrl.contains("lang=es-lat"))
-        assertTrue(secundarioLatino.isLatino)
+        assertTrue(defaultData.servers.isEmpty())
+        assertEquals(null, defaultData.embedUrl)
     }
 
     @Test
@@ -101,5 +91,11 @@ class DataAndViewModelTest {
     @Test
     fun testTmdbApiKeyConstant() {
         assertEquals("f369892a9607bf16bad402a98b662989", TmdbApiService.API_KEY)
+    }
+
+    @Test
+    fun testTmdbUsesLatinAmericanSpanishDefaults() {
+        assertEquals("es-MX", TmdbApiService.TMDB_LANGUAGE)
+        assertEquals("MX", TmdbApiService.TMDB_REGION)
     }
 }

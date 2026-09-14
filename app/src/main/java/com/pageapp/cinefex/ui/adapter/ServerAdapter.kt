@@ -27,11 +27,7 @@ class ServerAdapter(
 
         fun bind(server: ServerOption) {
             binding.textViewServerName.text = server.name.ifEmpty { "Servidor Latino ${bindingAdapterPosition + 1}" }
-            binding.textViewServerLanguage.text = if (server.language.contains("Latino", ignoreCase = true)) {
-                server.language
-            } else {
-                "${server.language} [LATINO]"
-            }
+            binding.textViewServerLanguage.text = server.language
             binding.root.setOnClickListener {
                 onServerClick(server)
             }

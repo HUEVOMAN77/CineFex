@@ -12,7 +12,6 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.lang.Exception
-import java.net.URLEncoder
 
 enum class MovieCategory {
     NOW_PLAYING,
@@ -57,7 +56,7 @@ class MovieRepository(
             val peliApiResponse = peliApiService.getLatinoServers(movieId)
             if (peliApiResponse.servers.isNotEmpty()) {
                 val latinoServers = peliApiResponse.servers.filter {
-                    it.embedUrl.isNotEmpty() && !it.language.contains("-ENG", ignoreCase = true)
+                        it.embedUrl.isNotEmpty() && isExplicitlyLatino(it.language.orEmpty())
                 }
                 if (latinoServers.isNotEmpty()) {
                     return MovieLinkData(servers = latinoServers)
@@ -77,30 +76,41 @@ class MovieRepository(
 
             if (document.exists()) {
                 val rawEmbedUrl = document.getString("embed_url")
+                val rawLanguage = document.getString("audio_language")
+                    ?: document.getString("language")
+                    ?: ""
+                val rawIsLatino = document.getBoolean("is_latino")
+                    ?: document.getBoolean("isLatino")
+                    ?: isExplicitlyLatino(rawLanguage)
                 val serversListRaw = document.get("servers") as? List<Map<String, Any>>
 
                 val servers = serversListRaw?.mapNotNull { item ->
                     val name = item["name"] as? String ?: ""
-                    val language = item["language"] as? String ?: "Español Latino"
+                    val language = item["audio_language"] as? String
+                        ?: item["language"] as? String
+                        ?: ""
                     val embedUrl = item["embed_url"] as? String ?: (item["embedUrl"] as? String ?: "")
+                    val itemIsLatino = (item["is_latino"] as? Boolean)
+                        ?: (item["isLatino"] as? Boolean)
+                        ?: isExplicitlyLatino(language)
 
-                    val isEnglishOnly = language.contains("SUB-ONLY", ignoreCase = true) ||
-                            language.contains("-ENG", ignoreCase = true) ||
-                            language.equals("English", ignoreCase = true)
-
-                    if (embedUrl.isNotEmpty() && !isEnglishOnly) {
+                    if (embedUrl.isNotEmpty() && itemIsLatino && isExplicitlyLatino(language)) {
                         ServerOption(
                             name = name,
-                            language = if (language.contains("Latino", ignoreCase = true)) language else "$language (Latino)",
+                            language = language,
                             embedUrl = embedUrl,
                             isLatino = true
                         )
                     } else null
                 }?.sortedBy { it.name } ?: emptyList()
 
-                if (servers.isNotEmpty() || !rawEmbedUrl.isNullOrEmpty()) {
+                val verifiedEmbedUrl = rawEmbedUrl.takeIf {
+                    !it.isNullOrEmpty() && rawIsLatino && isExplicitlyLatino(rawLanguage)
+                }
+
+                if (servers.isNotEmpty() || verifiedEmbedUrl != null) {
                     return MovieLinkData(
-                        embedUrl = rawEmbedUrl,
+                        embedUrl = verifiedEmbedUrl,
                         servers = servers
                     )
                 }
@@ -109,7 +119,8 @@ class MovieRepository(
             e.printStackTrace()
         }
 
-        // 4. Default Latino Server Providers Fallback
+        // No se inventan servidores Latino. Un parámetro como lang=lat no
+        // garantiza que el proveedor tenga audio o subtítulos en español.
         return getDefaultMovieLinkData(movieId)
     }
 
@@ -131,11 +142,11 @@ class MovieRepository(
                 for (match in matches) {
                     val embedUrl = match.groupValues[1]
                     val lang = match.groupValues[2]
-                    if (embedUrl.isNotEmpty() && !lang.contains("Subtitulado", ignoreCase = true) && !lang.contains("Ingles", ignoreCase = true)) {
+                    if (embedUrl.isNotEmpty() && isExplicitlyLatino(lang)) {
                         extractedServers.add(
                             ServerOption(
                                 name = "PeliApi PelisPlus (Latino)",
-                                language = "Español Latino",
+                                language = lang,
                                 embedUrl = embedUrl,
                                 isLatino = true
                             )
@@ -163,7 +174,10 @@ class MovieRepository(
                 for (match in matches) {
                     var embedUrl = match.groupValues[1]
                     if (embedUrl.startsWith("//")) embedUrl = "https:$embedUrl"
-                    if (embedUrl.isNotEmpty()) {
+                    // El enlace devuelto también debe declarar el idioma; que la
+                    // solicitud lleve lang=lat no demuestra que el proveedor lo
+                    // haya respetado.
+                    if (embedUrl.isNotEmpty() && isExplicitlyLatino(embedUrl)) {
                         extractedServers.add(
                             ServerOption(
                                 name = "PeliApi RePelisHD (Latino)",
@@ -183,42 +197,24 @@ class MovieRepository(
     }
 
     fun getDefaultMovieLinkData(movieId: Long): MovieLinkData {
-        val defaultLatinoServers = listOf(
-            ServerOption(
-                name = "Servidor 1 - Cuevana Latino HD",
-                language = "Español Latino 1080p",
-                embedUrl = "https://embed.su/embed/movie/$movieId?lang=lat",
-                isLatino = true
-            ),
-            ServerOption(
-                name = "Servidor 2 - PelisPlus Latino Ultra",
-                language = "Español Latino 4K/HD",
-                embedUrl = "https://autoembed.co/movie/tmdb/$movieId?lang=es-lat",
-                isLatino = true
-            ),
-            ServerOption(
-                name = "Servidor 3 - Repelis Latino Dual",
-                language = "Español Latino / Audio Dual",
-                embedUrl = "https://multiembed.mov/directstream.php?video_id=$movieId&tmdb=1&lang=lat",
-                isLatino = true
-            ),
-            ServerOption(
-                name = "Servidor 4 - VerPelis Latino Rápido",
-                language = "Español Latino Sin Esperas",
-                embedUrl = "https://vidsrc.to/embed/movie/$movieId?lang=lat",
-                isLatino = true
-            ),
-            ServerOption(
-                name = "Servidor 5 - Latino VIP Embed",
-                language = "Español Latino HD",
-                embedUrl = "https://vidsrc.me/embed/movie/$movieId?lang=lat",
-                isLatino = true
-            )
-        )
-
         return MovieLinkData(
             embedUrl = null,
-            servers = defaultLatinoServers
+            servers = emptyList()
         )
+    }
+
+    private fun isExplicitlyLatino(language: String): Boolean {
+        val normalized = language.trim().lowercase()
+        if (normalized.isEmpty()) return false
+
+        return normalized.contains("es-419") ||
+                normalized.contains("es-lat") ||
+                normalized.contains("es-mx") ||
+                normalized.contains("español latino") ||
+                normalized.contains("espanol latino") ||
+                normalized.contains("latino") ||
+                normalized.contains("latam") ||
+                normalized == "lat" ||
+                normalized.contains("lat/sub")
     }
 }

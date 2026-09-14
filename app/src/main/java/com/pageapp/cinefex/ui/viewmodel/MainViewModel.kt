@@ -150,7 +150,11 @@ class MainViewModel(
             } else if (!singleEmbedUrl.isNullOrEmpty()) {
                 _eventFlow.emit(MainUiEvent.OpenPlayer(singleEmbedUrl))
             } else {
-                _eventFlow.emit(MainUiEvent.ShowToast("No hay servidores disponibles para esta película"))
+                _eventFlow.emit(
+                    MainUiEvent.ShowToast(
+                        "No encontramos una fuente que confirme audio o subtítulos en español latino"
+                    )
+                )
             }
         }
     }

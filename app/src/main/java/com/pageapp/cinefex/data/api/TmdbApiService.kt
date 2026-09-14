@@ -13,28 +13,38 @@ interface TmdbApiService {
 
     @GET("movie/now_playing")
     suspend fun getNowPlayingMovies(
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
+        @Query("language") language: String = TMDB_LANGUAGE,
+        @Query("region") region: String = TMDB_REGION
     ): MovieResponse
 
     @GET("movie/popular")
     suspend fun getPopularMovies(
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
+        @Query("language") language: String = TMDB_LANGUAGE,
+        @Query("region") region: String = TMDB_REGION
     ): MovieResponse
 
     @GET("movie/top_rated")
     suspend fun getTopRatedMovies(
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
+        @Query("language") language: String = TMDB_LANGUAGE,
+        @Query("region") region: String = TMDB_REGION
     ): MovieResponse
 
     @GET("discover/movie")
     suspend fun getDiscoverMovies(
         @Query("with_genres") withGenres: String,
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
+        @Query("language") language: String = TMDB_LANGUAGE,
+        @Query("region") region: String = TMDB_REGION
     ): MovieResponse
 
     companion object {
         private const val BASE_URL = "https://api.themoviedb.org/3/"
         const val API_KEY = "f369892a9607bf16bad402a98b662989"
+        const val TMDB_LANGUAGE = "es-MX"
+        const val TMDB_REGION = "MX"
 
         fun create(): TmdbApiService {
             val apiKeyInterceptor = Interceptor { chain ->
