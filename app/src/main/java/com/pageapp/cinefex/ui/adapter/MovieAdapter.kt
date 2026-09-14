@@ -26,8 +26,9 @@ class MovieAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(movie: Movie) {
-            binding.tvTitle.text = movie.title
-            binding.ivPoster.load(movie.fullPosterUrl) {
+            binding.textViewMovieTitle.text = movie.title
+            binding.textViewRating.text = "LATINO"
+            binding.imageViewPoster.load(movie.fullPosterUrl) {
                 crossfade(true)
             }
             binding.root.setOnClickListener {

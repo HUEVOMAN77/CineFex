@@ -185,27 +185,33 @@ class MovieRepository(
     fun getDefaultMovieLinkData(movieId: Long): MovieLinkData {
         val defaultLatinoServers = listOf(
             ServerOption(
-                name = "PeliApi Latino Principal (-LAT)",
-                language = "Español Latino",
+                name = "Servidor 1 - Cuevana Latino HD",
+                language = "Español Latino 1080p",
                 embedUrl = "https://embed.su/embed/movie/$movieId?lang=lat",
                 isLatino = true
             ),
             ServerOption(
-                name = "PeliApi Latino Secundario (-ESL)",
-                language = "Español Latino",
+                name = "Servidor 2 - PelisPlus Latino Ultra",
+                language = "Español Latino 4K/HD",
                 embedUrl = "https://autoembed.co/movie/tmdb/$movieId?lang=es-lat",
                 isLatino = true
             ),
             ServerOption(
-                name = "PeliApi Latino Dual (-LAT)",
-                language = "Español Latino / Dual",
+                name = "Servidor 3 - Repelis Latino Dual",
+                language = "Español Latino / Audio Dual",
                 embedUrl = "https://multiembed.mov/directstream.php?video_id=$movieId&tmdb=1&lang=lat",
                 isLatino = true
             ),
             ServerOption(
-                name = "PeliApi Latino Fast (-LAT)",
-                language = "Español Latino",
+                name = "Servidor 4 - VerPelis Latino Rápido",
+                language = "Español Latino Sin Esperas",
                 embedUrl = "https://vidsrc.to/embed/movie/$movieId?lang=lat",
+                isLatino = true
+            ),
+            ServerOption(
+                name = "Servidor 5 - Latino VIP Embed",
+                language = "Español Latino HD",
+                embedUrl = "https://vidsrc.me/embed/movie/$movieId?lang=lat",
                 isLatino = true
             )
         )

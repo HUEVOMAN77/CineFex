@@ -7,4 +7,7 @@
     <string name="error_loading_movies">Error al cargar las películas</string>
     <string name="retry">Reintentar</string>
     <string name="close">Cerrar</string>
+    <string name="movie_poster">Póster de la película</string>
+    <string name="server_icon">Icono del servidor</string>
+    <string name="play_icon">Icono de reproducción</string>
 </resources>
