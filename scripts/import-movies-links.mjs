@@ -6,6 +6,7 @@ import { initializeApp, applicationDefault, getApps } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 
 const COLLECTION = "movies_links";
+const FIRESTORE_BATCH_SIZE = 450;
 const LANGUAGE_HINTS = [
   "es-419",
   "es-lat",
@@ -165,12 +166,15 @@ async function main() {
   }
 
   const db = getFirestore();
-  const batch = db.batch();
-  for (const record of records) {
-    const ref = db.collection(COLLECTION).doc(String(record.tmdbId));
-    batch.set(ref, record.document, { merge: true });
+  for (let start = 0; start < records.length; start += FIRESTORE_BATCH_SIZE) {
+    const batch = db.batch();
+    const chunk = records.slice(start, start + FIRESTORE_BATCH_SIZE);
+    for (const record of chunk) {
+      const ref = db.collection(COLLECTION).doc(String(record.tmdbId));
+      batch.set(ref, record.document, { merge: true });
+    }
+    await batch.commit();
   }
-  await batch.commit();
   console.log(`\nImportación completada: ${records.length} documento(s) escritos.`);
 }
 
